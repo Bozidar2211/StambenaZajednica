@@ -13,5 +13,40 @@ namespace StambenaZajednica.Data
             : base(options)
         {
         }
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            // Definisanje primarnih ključeva
+            modelBuilder.Entity<StambZajednica>()
+                .HasKey(sz => sz.Id);
+
+            modelBuilder.Entity<Stan>()
+                .HasKey(s => s.Id);
+
+            modelBuilder.Entity<Finansije>()
+                .HasKey(f => f.Id);
+
+            // Relacija: StambenaZajednica -> Stan (jedan-na-više)
+            modelBuilder.Entity<Stan>()
+                .HasOne(s => s.StambenaZajednica)
+                .WithMany(sz => sz.Stanovi)
+                .HasForeignKey(s => s.StambenaZajednicaId);
+
+            // Relacija: StambenaZajednica -> Finansija (jedan-na-više)
+            modelBuilder.Entity<Finansije>()
+                .HasOne(f => f.StambenaZajednica)
+                .WithMany(sz => sz.Finansije)
+                .HasForeignKey(f => f.StambenaZajednicaId);
+
+            // Definisanje preciznosti za decimalne vrednosti
+            modelBuilder.Entity<Finansije>()
+                .Property(f => f.IznosDuga)
+                .HasColumnType("decimal(18,2)");
+
+            modelBuilder.Entity<Finansije>()
+                .Property(f => f.IznosUplate)
+                .HasColumnType("decimal(18,2)");
+        }
     }
 }
