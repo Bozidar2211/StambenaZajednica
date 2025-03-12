@@ -1,0 +1,32 @@
+﻿@model StambenaZajednica.Models.Stan
+
+@{
+    ViewData["Title"] = "Izmeni stan";
+}
+
+<h2>Izmeni stan</h2>
+
+<form asp-action="Edit">
+    <input type="hidden" asp-for="Id" />
+
+    <div class="form-group">
+        <label asp-for="BrojStana"></label>
+        <input asp-for="BrojStana" class="form-control" required />
+    </div>
+    <div class="form-group">
+        <label asp-for="Pin">PIN kod (6 cifara)</label>
+        <input asp-for="Pin" class="form-control" type="password" pattern="\d{6}" required />
+    </div>
+    <div class="form-group">
+        <label asp-for="StambenaZajednicaId">Stambena zajednica</label>
+        <select asp-for="StambenaZajednicaId" asp-items="ViewBag.StambeneZajednice" class="form-control" required></select>
+    </div>
+    <div class="form-check">
+        <input type="checkbox" asp-for="DaLiJeZakljucan" class="form-check-input" />
+        <label asp-for="DaLiJeZakljucan" class="form-check-label"></label>
+    </div>
+
+    <button type="submit" class="btn btn-warning">Sačuvaj izmene</button>
+</form>
+
+<a asp-action="Index">Nazad</a>

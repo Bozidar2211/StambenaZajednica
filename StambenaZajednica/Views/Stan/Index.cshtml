@@ -1,0 +1,26 @@
+﻿@model IEnumerable<Stan>
+
+<h2>Lista stanova</h2>
+<a asp-action="Create" class="btn btn-primary">Dodaj stan</a>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Broj stana</th>
+            <th>Površina</th>
+            <th>Akcije</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var stan in Model)
+        {
+            <tr>
+                <td>@stan.BrojStana</td>
+                <td>@stan.Povrsina m²</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@stan.Id" class="btn btn-warning">Izmeni</a>
+                    <a asp-action="Delete" asp-route-id="@stan.Id" class="btn btn-danger">Obriši</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

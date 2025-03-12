@@ -1,0 +1,28 @@
+﻿@model IEnumerable<FinansijskaEvidencija>
+
+<h2>Pregled finansija</h2>
+<a asp-action="Create" class="btn btn-primary">Dodaj finansijski zapis</a>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Tip troška</th>
+            <th>Iznos</th>
+            <th>Status</th>
+            <th>Akcije</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var finansija in Model)
+        {
+            <tr>
+                <td>@finansija.TipTroska</td>
+                <td>@finansija.IznosDuga RSD</td>
+                <td>@finansija.Status</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@finansija.Id" class="btn btn-warning">Izmeni</a>
+                    <a asp-action="Delete" asp-route-id="@finansija.Id" class="btn btn-danger">Obriši</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
