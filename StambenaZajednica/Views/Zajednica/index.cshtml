@@ -1,6 +1,30 @@
-﻿namespace StambenaZajednica.Views.Zajednica
-{
-    public class index
-    {
-    }
+﻿@model IEnumerable<StambZajednica>
+
+@{
+    ViewData["Title"] = "Lista stambenih zajednica";
 }
+
+<h2>Lista stambenih zajednica</h2>
+<a asp-action="Create" class="btn btn-primary">Dodaj novu zajednicu</a>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Naziv</th>
+            <th>Adresa</th>
+            <th>Akcije</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var zajednica in Model)
+        {
+            <tr>
+                <td>@zajednica.Naziv</td>
+                <td>@zajednica.Adresa</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@zajednica.Id" class="btn btn-warning">Izmeni</a>
+                    <a asp-action="Delete" asp-route-id="@zajednica.Id" class="btn btn-danger">Obriši</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

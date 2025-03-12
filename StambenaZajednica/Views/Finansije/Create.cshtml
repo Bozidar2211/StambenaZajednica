@@ -1,6 +1,32 @@
-﻿namespace StambenaZajednica.Views.Finansije
-{
-    public class Create
-    {
-    }
+﻿@model FinansijskaEvidencija
+
+@{
+    ViewData["Title"] = "Dodaj finansijski zapis";
 }
+
+<h2>Dodaj finansijski zapis</h2>
+
+<form asp-action="Create">
+    <div class="form-group">
+        <label asp-for="TipTroska"></label>
+        <input asp-for="TipTroska" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label asp-for="IznosDuga"></label>
+        <input asp-for="IznosDuga" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label asp-for="DatumDospeca"></label>
+        <input asp-for="DatumDospeca" type="date" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label asp-for="Status"></label>
+        <select asp-for="Status" class="form-control">
+            <option value="Neplaćeno">Neplaćeno</option>
+            <option value="Delimično plaćeno">Delimično plaćeno</option>
+            <option value="Plaćeno">Plaćeno</option>
+        </select>
+    </div>
+    <button type="submit" class="btn btn-success">Sačuvaj</button>
+</form>
+<a asp-action="Index">Nazad</a>
