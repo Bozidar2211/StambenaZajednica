@@ -1,12 +1,14 @@
-﻿@model IEnumerable<Stan>
+﻿@model IEnumerable<StambenaZajednica.Models.Stan>
 
-<h2>Lista stanova</h2>
-<a asp-action="Create" class="btn btn-primary">Dodaj stan</a>
+<h2>Lista Stanova</h2>
+<a asp-action="Create" class="btn btn-primary">Dodaj Stan</a>
+
 <table class="table">
     <thead>
         <tr>
-            <th>Broj stana</th>
-            <th>Površina</th>
+            <th>Broj Stana</th>
+            <th>PIN</th>
+            <th>Stambena Zajednica</th>
             <th>Akcije</th>
         </tr>
     </thead>
@@ -15,7 +17,8 @@
         {
             <tr>
                 <td>@stan.BrojStana</td>
-                <td>@stan.Povrsina m²</td>
+                <td>@stan.Pin</td>
+                <td>@stan.StambenaZajednica.Naziv</td>
                 <td>
                     <a asp-action="Edit" asp-route-id="@stan.Id" class="btn btn-warning">Izmeni</a>
                     <a asp-action="Delete" asp-route-id="@stan.Id" class="btn btn-danger">Obriši</a>
