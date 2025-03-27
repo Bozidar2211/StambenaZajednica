@@ -10,5 +10,9 @@
         // Strani ključ prema stambenoj zajednici
         public int StambenaZajednicaId { get; set; }
         public required StambZajednica StambenaZajednica { get; set; }  // Navigacija ka stambenoj zajednici
+
+        // Stanar vezan za stan (navigacija)
+        public string? StanarId { get; set; }  //Relacija sa korisnikom (Stanarom)
+        public Stanar? Stanar { get; set; }  // Stanar koji je vezan za stan
     }
 }

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using StambenaZajednica.Data;
 
@@ -11,9 +12,11 @@ using StambenaZajednica.Data;
 namespace StambenaZajednica.Migrations
 {
     [DbContext(typeof(RepositoryDbContext))]
-    partial class RepositoryDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250321170642_MigracijaUpdate")]
+    partial class MigracijaUpdate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -338,9 +341,6 @@ namespace StambenaZajednica.Migrations
             modelBuilder.Entity("StambenaZajednica.Models.Stanar", b =>
                 {
                     b.HasBaseType("StambenaZajednica.Models.ApplicationUser");
-
-                    b.Property<string>("Pin")
-                        .HasColumnType("nvarchar(max)");
 
                     b.HasDiscriminator().HasValue("Stanar");
                 });
