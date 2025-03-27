@@ -2,6 +2,9 @@ using StambenaZajednica.Data;
 using Microsoft.EntityFrameworkCore;
 using StambenaZajednica.Data.Repositories;
 using StambenaZajednica.Data.RepositoryInterfaces;
+using Microsoft.AspNetCore.Identity;
+using StambenaZajednica.Services;
+using StambenaZajednica.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,10 +12,18 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<RepositoryDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+//Registracija Identity sistema za autentifikaciju
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
+    .AddEntityFrameworkStores<RepositoryDbContext>()
+    .AddDefaultTokenProviders();
+
 // Registracija Repository interfejsa
 builder.Services.AddScoped<IStambenaZajednicaRepository, StambenaZajednicaRepository>();
 builder.Services.AddScoped<IStanRepository, StanRepository>();
 builder.Services.AddScoped<IFinansijeRepository, FinansijeRepository>();
+
+//Registracija Pin servisa
+builder.Services.AddScoped<PinGeneratorService>();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
