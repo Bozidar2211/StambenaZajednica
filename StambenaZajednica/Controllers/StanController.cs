@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using StambenaZajednica.Data.RepositoryInterfaces;
 using StambenaZajednica.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace StambenaZajednica.Controllers
 {
@@ -13,17 +14,23 @@ namespace StambenaZajednica.Controllers
             _stanRepo = stanRepo;
         }
 
+        // 📌 Prikaz svih stanova (dostupno samo za upravnika)
+        [Authorize(Roles = "Upravnik")]
         public async Task<IActionResult> Index()
         {
             var stanovi = await _stanRepo.GetAllAsync();
             return View(stanovi);
         }
 
+        // 📌 Prikaz forme za kreiranje stana (samo za upravnika)
+        [Authorize(Roles = "Upravnik")]
         public IActionResult Create()
         {
             return View();
         }
 
+        // 📌 POST: Dodavanje novog stana
+        [Authorize(Roles = "Upravnik")]
         [HttpPost]
         public async Task<IActionResult> Create(Stan stan)
         {
@@ -35,6 +42,8 @@ namespace StambenaZajednica.Controllers
             return View(stan);
         }
 
+        // 📌 Prikaz forme za izmenu stana (samo za upravnika)
+        [Authorize(Roles = "Upravnik")]
         public async Task<IActionResult> Edit(int id)
         {
             var stan = await _stanRepo.GetByIdAsync(id);
@@ -42,6 +51,8 @@ namespace StambenaZajednica.Controllers
             return View(stan);
         }
 
+        // 📌 POST: Ažuriranje stana (samo za upravnika)
+        [Authorize(Roles = "Upravnik")]
         [HttpPost]
         public async Task<IActionResult> Edit(int id, Stan stan)
         {
@@ -55,6 +66,8 @@ namespace StambenaZajednica.Controllers
             return View(stan);
         }
 
+        // 📌 Prikaz forme za brisanje stana (samo za upravnika)
+        [Authorize(Roles = "Upravnik")]
         public async Task<IActionResult> Delete(int id)
         {
             var stan = await _stanRepo.GetByIdAsync(id);
@@ -62,6 +75,8 @@ namespace StambenaZajednica.Controllers
             return View(stan);
         }
 
+        // 📌 POST: Brisanje stana (samo za upravnika)
+        [Authorize(Roles = "Upravnik")]
         [HttpPost, ActionName("Delete")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {

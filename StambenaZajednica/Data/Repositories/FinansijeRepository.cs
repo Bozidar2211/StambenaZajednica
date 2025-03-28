@@ -17,6 +17,13 @@ namespace StambenaZajednica.Data.Repositories
         {
             return await _context.Finansije.ToListAsync();
         }
+        public async Task<IEnumerable<Finansije>> GetAllForHousingCommunityAsync(int stambenaZajednicaId)
+        {
+            return await _context.Finansije
+                .Where(f => f.StambenaZajednicaId == stambenaZajednicaId)
+                .ToListAsync();
+        }
+
 
         public async Task<Finansije> GetByIdAsync(int id)
         {
