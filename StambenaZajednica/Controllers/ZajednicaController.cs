@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using StambenaZajednica.Data.RepositoryInterfaces;
 using StambenaZajednica.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace StambenaZajednica.Controllers
 {
@@ -13,17 +14,23 @@ namespace StambenaZajednica.Controllers
             _zajednicaRepo = zajednicaRepo;
         }
 
+        // 📌 Prikaz svih stambenih zajednica - dostupno svima (Stanar i Upravnik)
+        [Authorize(Roles = "Stanar,Upravnik")]
         public async Task<IActionResult> Index()
         {
             var zajednice = await _zajednicaRepo.GetAllAsync();
             return View(zajednice);
         }
 
+        // 📌 Prikaz forme za kreiranje stambene zajednice - samo za upravnika
+        [Authorize(Roles = "Upravnik")]
         public IActionResult Create()
         {
             return View();
         }
 
+        // 📌 POST: Kreiranje stambene zajednice - samo za upravnika
+        [Authorize(Roles = "Upravnik")]
         [HttpPost]
         public async Task<IActionResult> Create(StambZajednica zajednica)
         {
@@ -35,6 +42,8 @@ namespace StambenaZajednica.Controllers
             return View(zajednica);
         }
 
+        // 📌 Prikaz forme za izmenu stambene zajednice - samo za upravnika
+        [Authorize(Roles = "Upravnik")]
         public async Task<IActionResult> Edit(int id)
         {
             var zajednica = await _zajednicaRepo.GetByIdAsync(id);
@@ -42,6 +51,8 @@ namespace StambenaZajednica.Controllers
             return View(zajednica);
         }
 
+        // 📌 POST: Ažuriranje stambene zajednice - samo za upravnika
+        [Authorize(Roles = "Upravnik")]
         [HttpPost]
         public async Task<IActionResult> Edit(int id, StambZajednica zajednica)
         {
@@ -55,6 +66,8 @@ namespace StambenaZajednica.Controllers
             return View(zajednica);
         }
 
+        // 📌 Prikaz forme za brisanje stambene zajednice - samo za upravnika
+        [Authorize(Roles = "Upravnik")]
         public async Task<IActionResult> Delete(int id)
         {
             var zajednica = await _zajednicaRepo.GetByIdAsync(id);
@@ -62,6 +75,8 @@ namespace StambenaZajednica.Controllers
             return View(zajednica);
         }
 
+        // 📌 POST: Brisanje stambene zajednice - samo za upravnika
+        [Authorize(Roles = "Upravnik")]
         [HttpPost, ActionName("Delete")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
