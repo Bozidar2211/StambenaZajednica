@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using StambenaZajednica.Models;
 using StambenaZajednica.Services;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace StambenaZajednica.Controllers
@@ -45,7 +47,8 @@ namespace StambenaZajednica.Controllers
 
                 if (result.Succeeded)
                 {
-                    await _pinService.GeneratePinForUser(user); // Generišemo i dodeljujemo PIN jednom zauvek
+                    await _userManager.AddToRoleAsync(user, "Stanar");
+                    await _pinService.GeneratePinForUser(user); // Generišemo i dodeljujemo PIN
                     _logger.LogInformation("Uspešno kreiran korisnik sa email: {Email}", model.Email);
                     await _signInManager.SignInAsync(user, isPersistent: false);
                     return RedirectToAction("Index", "Home");
@@ -83,7 +86,23 @@ namespace StambenaZajednica.Controllers
                     if (result.Succeeded)
                     {
                         _logger.LogInformation("Uspešna prijava za email: {Email}", model.Email);
-                        return RedirectToAction("Index", "Home");
+
+                        // Provera da li je korisnik upravnik ili stanar
+                        if (await _userManager.IsInRoleAsync(user, "Upravnik"))
+                        {
+                            // Ako je Upravnik, preusmeriti ga na početnu stranicu
+                            return RedirectToAction("Index", "Home");
+                        }
+                        else if (await _userManager.IsInRoleAsync(user, "Stanar"))
+                        {
+                            // Ako je Stanar, preusmeriti ga na MyPin
+                            return RedirectToAction("MyPin", "Auth");
+                        }
+                        else
+                        {
+                            // Ako nema odgovarajuću ulogu, prikazati grešku
+                            return RedirectToAction("AccessDenied", "Account");
+                        }
                     }
                     else
                     {
@@ -99,6 +118,21 @@ namespace StambenaZajednica.Controllers
             }
 
             return View(model);
+        }
+        [Authorize(Roles = "Stanar")]
+        public async Task<IActionResult> MyPin()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+#pragma warning disable CS8604 // Possible null reference argument.
+            var stanar = await _userManager.FindByIdAsync(userId);
+#pragma warning restore CS8604 // Possible null reference argument.
+
+            if (stanar == null)
+            {
+                return NotFound();
+            }
+
+            return View(stanar);
         }
     }
 }
