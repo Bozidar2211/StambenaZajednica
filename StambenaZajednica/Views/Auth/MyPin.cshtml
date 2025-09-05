@@ -1,0 +1,16 @@
+﻿@model StambenaZajednica.Models.Stanar
+
+@{
+    ViewData["Title"] = "Moj PIN";
+}
+
+<h2>Moj PIN</h2>
+
+<div class="card">
+    <div class="card-body">
+        <h5 class="card-title">Vaš PIN za pristup finansijama</h5>
+        <p class="card-text" style="font-size: 24px; font-weight: bold;">@Model.Pin</p>
+    </div>
+</div>
+
+<a href="@Url.Action("Index", "Home")" class="btn btn-primary mt-3">Početna stranica</a>

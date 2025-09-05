@@ -9,6 +9,7 @@
             <th>Broj Stana</th>
             <th>PIN</th>
             <th>Stambena Zajednica</th>
+            <th>Stanar</th> <!-- Dodajemo kolonu za dodelu stanara -->
             <th>Akcije</th>
         </tr>
     </thead>
@@ -19,6 +20,21 @@
                 <td>@stan.BrojStana</td>
                 <td>@stan.Pin</td>
                 <td>@stan.StambenaZajednica.Naziv</td>
+                <td>
+                    <!-- Dodajemo dropdown meni za dodelu stanara -->
+                    <form asp-action="AssignStanar" method="post">
+                        <input type="hidden" name="stanId" value="@stan.Id" />
+                        <select name="stanarId" class="form-control">
+                            <option value="">Izaberi Stanara</option>
+                            @foreach (var stanar in ViewBag.Stanari as IEnumerable<ApplicationUser> ?? Enumerable.Empty<ApplicationUser>())
+                            {
+                                <option value="@stanar.Id">@stanar.UserName</option>
+                            }
+
+                        </select>
+                        <button type="submit" class="btn btn-success">Dodeli Stanara</button>
+                    </form>
+                </td>
                 <td>
                     <a asp-action="Edit" asp-route-id="@stan.Id" class="btn btn-warning">Izmeni</a>
                     <a asp-action="Delete" asp-route-id="@stan.Id" class="btn btn-danger">Obriši</a>
