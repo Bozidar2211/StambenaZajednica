@@ -4,10 +4,12 @@ namespace StambenaZajednica.Data.RepositoryInterfaces
 {
     public interface IStanRepository
     {
-        Task<List<Stan>> GetAllAsync();
-        Task<Stan> GetByIdAsync(int id);
-        Task AddAsync(Stan stan);
-        Task UpdateAsync(Stan stan);
-        Task DeleteAsync(int id);
+        Stan? GetStanById(int id);
+        IEnumerable<Stan> GetSviStanovi();
+        IEnumerable<Stan> GetStanoviBezStanara();
+        void DodeliStanKorisniku(int stanId, string userId);
+        void AddStan(Stan stan);
+        void UpdateStan(Stan stan);
+        void DeleteStan(int id);
     }
 }

@@ -1,0 +1,27 @@
+﻿@model IEnumerable<StambenaZajednica.Models.Uplata>
+
+<div class="container mt-4">
+    <h2>Pregled svih uplata</h2>
+
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>Račun</th>
+                <th>Stanar</th>
+                <th>Iznos</th>
+                <th>Datum</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var uplata in Model)
+            {
+                <tr>
+                    <td>@uplata.Racun?.Opis</td>
+                    <td>@uplata.Stanar?.UserName</td>
+                    <td>@uplata.Iznos.ToString("C")</td>
+                    <td>@uplata.DatumUplate.ToShortDateString()</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

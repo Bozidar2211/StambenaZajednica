@@ -1,0 +1,55 @@
+﻿@model IEnumerable<StambenaZajednica.Models.Racun>
+
+<div class="container mt-4">
+    <h2>Administracija računa</h2>
+
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>Tip</th>
+                <th>Iznos</th>
+                <th>Dospeće</th>
+                <th>Opis</th>
+                <th>Za stan</th>
+                <th>Za zajednicu</th>
+                <th>Status</th>
+                <th>Uplaćeno</th>
+                <th>Preostalo</th>
+                <th>Višak</th>
+                <th>Akcije</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var racun in Model)
+            {
+                var uplate = racun.Uplate ?? new List<StambenaZajednica.Models.Uplata>();
+                var ukupnoUplaceno = uplate.Sum(u => u.Iznos);
+
+                var preostalo = Math.Max(racun.Iznos - ukupnoUplaceno, 0);
+                var visak = Math.Max(ukupnoUplaceno - racun.Iznos, 0);
+
+                var status = ukupnoUplaceno == 0
+                ? "Neplaćeno"
+                : (ukupnoUplaceno < racun.Iznos
+                ? "Delimično plaćeno"
+                : (visak > 0 ? "Preplaćeno" : "Plaćeno"));
+
+                <tr>
+                    <td>@racun.Tip</td>
+                    <td>@racun.Iznos RSD</td>
+                    <td>@racun.DatumDospeca.ToShortDateString()</td>
+                    <td>@racun.Opis</td>
+                    <td>@racun.Stan?.BrojStana</td>
+                    <td>@racun.StambZajednica?.Naziv</td>
+                    <td>@status</td>
+                    <td>@ukupnoUplaceno RSD</td>
+                    <td>@preostalo RSD</td>
+                    <td>@visak RSD</td>
+                    <td>    
+                        <a asp-action="Delete" asp-route-id="@racun.Id" class="btn btn-danger btn-sm">Obriši</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

@@ -1,0 +1,10 @@
+﻿@model StambenaZajednica.Models.Stan
+
+<h3>Reset PIN-a za stan @Model.BrojStana</h3>
+<p>Da li ste sigurni da želite da resetujete PIN i otključate finansije?</p>
+
+<form asp-action="ResetujPin" method="post">
+    <input type="hidden" asp-for="Id" />
+    <button type="submit" class="btn btn-warning">Resetuj PIN</button>
+    <a asp-action="Index" asp-controller="Stan" class="btn btn-secondary">Otkaži</a>
+</form>

@@ -1,49 +1,115 @@
-﻿<!DOCTYPE html>
-<html lang="en">
+﻿@using Microsoft.AspNetCore.Identity
+@using StambenaZajednica.Models
+@using Microsoft.EntityFrameworkCore
+@inject UserManager<ApplicationUser> UserManager
+
+<!DOCTYPE html>
+<html lang="sr">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - StambenaZajednica</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/StambenaZajednica.styles.css" asp-append-version="true" />
+    <title>@ViewData["Title"] - Stambena Zajednica</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">StambenaZajednica</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" asp-controller="Home" asp-action="Index">Zajednica</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navMenu">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    @if (User.IsInRole("Upravnik"))
+                    {
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                            <a class="nav-link" asp-controller="Stan" asp-action="Index">Stanovi</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                            <a class="nav-link" asp-controller="Zajednica" asp-action="Index">Zajednice</a>
                         </li>
-                    </ul>
-                </div>
+                      /*  <li class="nav-item">
+                           <a class="nav-link" asp-controller="Finansije" asp-action="Index">Finansije</a>
+                        </li>
+                      */
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Uplata" asp-action="Index">Uplate</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Finansije" asp-action="Create">Dodaj račun</a>
+                        </li>
+                        /*
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Uplata" asp-action="Create">Dodaj uplatu</a>
+                        </li>
+                        */
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Finansije" asp-action="Administracija">Administracija</a>
+                        </li>
+                    }
+                    else if (User.IsInRole("Stanar"))
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Stan" asp-action="MojStan">Moj stan</a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Finansije" asp-action="Index">Finansije</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Uplata" asp-action="MojeUplate">Moje uplate</a>
+                        </li>
+                    }
+                </ul>
+
+
+                <ul class="navbar-nav ms-auto">
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        var user = await UserManager.Users
+                        .Include(u => u.Stan)
+                        .FirstOrDefaultAsync(u => u.UserName == User.Identity.Name);
+
+
+                        <li class="nav-item">
+                            <span class="nav-link text-light">
+                                Zdravo, @(User.Identity?.Name ?? "Korisnik")
+                            </span>
+                        </li>
+
+                        @if (user?.Stan != null)
+                        {
+                            <li class="nav-item">
+                                <span class="nav-link text-warning">
+                                    PIN: @user.Stan.Pin
+                                </span>
+                            </li>
+                        }
+
+                        <li class="nav-item">
+                            <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-link nav-link text-light">Odjava</button>
+                            </form>
+                        </li>
+                    }
+                    else
+                    {
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Account" asp-action="Login">Prijava</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Account" asp-action="Register">Registracija</a>
+                        </li>
+                    }
+                </ul>
             </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        @RenderBody()
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2025 - StambenaZajednica - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    @await RenderSectionAsync("Scripts", required: false)
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

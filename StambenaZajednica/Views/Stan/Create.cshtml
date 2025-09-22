@@ -1,27 +1,34 @@
 ﻿@model StambenaZajednica.Models.Stan
-
 @{
     ViewData["Title"] = "Dodaj stan";
 }
 
-<h2>Dodaj stan</h2>
+<div class="container mt-4">
+    <h2 class="mb-4 text-center">Dodaj novi stan</h2>
 
-<form asp-action="Create">
-    <div class="form-group">
-        <label asp-for="BrojStana"></label>
-        <input asp-for="BrojStana" class="form-control" required />
-    </div>
-    <div class="form-group">
-        <label asp-for="Pin">PIN kod (6 cifara)</label>
-        <input asp-for="Pin" class="form-control" type="password" pattern="\d{6}" required />
-    </div>
-    <div class="form-group">
-        <label asp-for="StambenaZajednicaId">Stambena zajednica</label>
-        <select asp-for="StambenaZajednicaId" asp-items="ViewBag.StambeneZajednice" class="form-control" required>
-            <option value="">-- Izaberi zajednicu --</option>
-        </select>
-    </div>
-    <button type="submit" class="btn btn-success">Sačuvaj</button>
-</form>
+    <form asp-action="Create" method="post">
+        <div class="mb-3">
+            <label asp-for="BrojStana" class="form-label">Broj stana</label>
+            <input asp-for="BrojStana" class="form-control" required />
+            <span asp-validation-for="BrojStana" class="text-danger"></span>
+        </div>
 
-<a asp-action="Index">Nazad</a>
+        <div class="mb-3">
+            <label asp-for="Kvadratura" class="form-label">Kvadratura</label>
+            <input asp-for="Kvadratura" class="form-control" type="number" min="1" required />
+            <span asp-validation-for="Kvadratura" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="ZajednicaId" class="form-label">Stambena zajednica</label>
+            <select asp-for="ZajednicaId" class="form-select" asp-items="ViewBag.Zajednice" required>
+                <option value="">-- Izaberi zajednicu --</option>
+            </select>
+            <span asp-validation-for="ZajednicaId" class="text-danger"></span>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">Sačuvaj</button>
+    </form>
+</div>
+
+

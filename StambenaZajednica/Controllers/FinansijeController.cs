@@ -1,139 +1,185 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using StambenaZajednica.Data.RepositoryInterfaces;
-using StambenaZajednica.Data;
 using StambenaZajednica.Models;
-using System.Security.Claims;
-using System.Threading.Tasks;
+using StambenaZajednica.Helpers; 
 
 namespace StambenaZajednica.Controllers
 {
-    [Authorize] // Samo prijavljeni korisnici mogu pristupiti
+    [Authorize]
     public class FinansijeController : Controller
     {
-        private readonly IFinansijeRepository _finansijeRepo;
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly RepositoryDbContext _context;
+        private readonly IRacunRepository _racunRepo;
+        private readonly IStanRepository _stanRepo;
+        private readonly IStambenaZajednicaRepository _zajednicaRepo;
 
-        public FinansijeController(IFinansijeRepository finansijeRepo, UserManager<ApplicationUser> userManager, RepositoryDbContext context)
+        public FinansijeController(UserManager<ApplicationUser> userManager,
+                                   IRacunRepository racunRepo,
+                                   IStanRepository stanRepo,
+                                   IStambenaZajednicaRepository zajednicaRepo)
         {
-            _finansijeRepo = finansijeRepo;
             _userManager = userManager;
-            _context = context;
+            _racunRepo = racunRepo;
+            _stanRepo = stanRepo;
+            _zajednicaRepo = zajednicaRepo;
         }
 
-        // 📌 Prikaz svih finansija - različit pristup za upravnika i stanara
+        // GET: forma za unos PIN-a ili pregled svih računa za upravnika
+        [HttpGet]
         public async Task<IActionResult> Index()
         {
-            var user = await _userManager.GetUserAsync(User);
-
             if (User.IsInRole("Upravnik"))
             {
-                var sveFinansije = await _finansijeRepo.GetAllAsync();
-                return View(sveFinansije);
+                var sviRacuni = _racunRepo.GetSviRacuni();
+                return View("Finansije", sviRacuni);
             }
 
-            // Stanar - dohvatamo njegovu stambenu zajednicu
-#pragma warning disable CS8602 // Dereference of a possibly null reference.
-            var stan = await _context.Stanovi.FirstOrDefaultAsync(s => s.StanarId == user.Id);
+            var user = await _userManager.GetUserAsync(User);
+            if (user?.StanId == null) return RedirectToAction("Index", "Home");
 
-            if (stan == null)
-            {
-                return NotFound("Nema povezan stan.");
-            }
-
-            var finansije = stan != null
-            ? await _finansijeRepo.GetAllForHousingCommunityAsync(stan.StambenaZajednicaId)
-            : new List<Finansije>();
-
-            return View(finansije);
+            ViewBag.StanId = user.StanId;
+            return View(); // prikazuje formu za unos PIN-a
         }
 
-        // 📌 GET: Prikaz forme za kreiranje finansijskog unosa (samo za upravnika)
+        // POST: provera PIN-a
+        [HttpPost]
+        public async Task<IActionResult> Index(string pin)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user?.StanId == null) return RedirectToAction("Index", "Home");
+
+            var stan = _stanRepo.GetStanById(user.StanId.Value);
+            if (stan == null) return RedirectToAction("Index", "Home");
+
+            if (stan.FinansijeZakljucane)
+            {
+                ModelState.AddModelError("", "Pristup finansijama je zaključan. Obratite se upravniku.");
+                return View();
+            }
+
+            // Validacija PIN-a
+            if (string.IsNullOrWhiteSpace(pin) || pin.Length != 6 || stan.Pin != pin)
+            {
+                stan.PinAttempts++;
+                if (stan.PinAttempts >= 3)
+                {
+                    stan.FinansijeZakljucane = true;
+                }
+                _stanRepo.UpdateStan(stan);
+                ModelState.AddModelError("", "Pogrešan PIN.");
+                return View();
+            }
+
+            // PIN je tačan
+            stan.PinAttempts = 0;
+            _stanRepo.UpdateStan(stan);
+
+            var racuniStana = _racunRepo.GetRacuniZaStan(stan.Id);
+            var racuniZajednice = _racunRepo.GetRacuniZaZajednicu(stan.ZajednicaId);
+
+            var sviRacuni = racuniStana
+                .UnionBy(racuniZajednice, r => r.Id)
+                .ToList();
+
+            return View("Finansije", sviRacuni);
+        }
+
+        // 📌 Administracija za upravnika
+        [Authorize(Roles = "Upravnik")]
+        public IActionResult Administracija()
+        {
+            var sviRacuni = _racunRepo.GetSviRacuni();
+            return View(sviRacuni);
+        }
+
         [Authorize(Roles = "Upravnik")]
         public IActionResult Create()
         {
+            ViewBag.Stanovi = new SelectList(_stanRepo.GetSviStanovi(), "Id", "BrojStana");
+            ViewBag.Zajednice = new SelectList(_zajednicaRepo.GetSveZajednice(), "Id", "Naziv");
             return View();
         }
 
-        // 📌 POST: Dodavanje novog finansijskog unosa
         [Authorize(Roles = "Upravnik")]
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Finansije finansije)
+        public IActionResult Create(Racun racun)
         {
-            if (ModelState.IsValid)
+            //greske
+            if (ModelState["Iznos"]?.Errors.Count > 0)
+                ModelState.AddModelError("Iznos", "Iznos mora biti veći od 0.");
+
+            if (ModelState["DatumDospeca"]?.Errors.Count > 0)
+                ModelState.AddModelError("DatumDospeca", "Morate uneti datum dospeća.");
+
+            if (ModelState["Tip"]?.Errors.Count > 0)
+                ModelState.AddModelError("Tip", "Morate odabrati tip troška.");
+
+            if (racun.StambZajednicaId <= 0)
+                ModelState.AddModelError("StambZajednicaId", "Morate odabrati zajednicu.");
+
+            if (!ModelState.IsValid)
             {
-                await _finansijeRepo.AddAsync(finansije);
-                return RedirectToAction(nameof(Index));
+                ViewBag.Stanovi = new SelectList(_stanRepo.GetSviStanovi(), "Id", "BrojStana");
+                ViewBag.Zajednice = new SelectList(_zajednicaRepo.GetSveZajednice(), "Id", "Naziv");
+                return View(racun);
             }
-            return View(finansije);
+
+            racun.Datum = DateTime.Now;
+            _racunRepo.AddRacun(racun);
+            return RedirectToAction("Administracija");
         }
 
-        // 📌 GET: Prikaz forme za izmenu finansijskog unosa
+
         [Authorize(Roles = "Upravnik")]
-        public async Task<IActionResult> Edit(int id)
+        public IActionResult OznaciPlaceno(int id)
         {
-            var finansije = await _finansijeRepo.GetByIdAsync(id);
-            if (finansije == null)
+            var racun = _racunRepo.GetRacunById(id);
+            if (racun == null) return NotFound();
+
+            if (!racun.JePlaceno)
             {
-                return NotFound();
+                racun.JePlaceno = true;
+                _racunRepo.UpdateRacun(racun);
             }
-            return View(finansije);
+
+            return RedirectToAction("Administracija");
         }
 
-        // 📌 POST: Ažuriranje finansijskog unosa
         [Authorize(Roles = "Upravnik")]
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, Finansije finansije)
+        public IActionResult Delete(int id)
         {
-            if (id != finansije.Id)
-            {
-                return BadRequest();
-            }
+            var racun = _racunRepo.GetRacunById(id);
+            if (racun == null) return NotFound();
 
-            if (ModelState.IsValid)
-            {
-                await _finansijeRepo.UpdateAsync(finansije);
-                return RedirectToAction(nameof(Index));
-            }
-            return View(finansije);
+            return View(racun);
         }
 
-        // 📌 GET: Prikaz detalja određenog finansijskog unosa
-        public async Task<IActionResult> Details(int id)
-        {
-            var finansije = await _finansijeRepo.GetByIdAsync(id);
-            if (finansije == null)
-            {
-                return NotFound();
-            }
-            return View(finansije);
-        }
-
-        // 📌 GET: Prikaz forme za brisanje
-        [Authorize(Roles = "Upravnik")]
-        public async Task<IActionResult> Delete(int id)
-        {
-            var finansije = await _finansijeRepo.GetByIdAsync(id);
-            if (finansije == null)
-            {
-                return NotFound();
-            }
-            return View(finansije);
-        }
-
-        // 📌 POST: Brisanje finansijskog unosa
         [Authorize(Roles = "Upravnik")]
         [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        public IActionResult DeleteConfirmed(int id)
         {
-            await _finansijeRepo.DeleteAsync(id);
-            return RedirectToAction(nameof(Index));
+            _racunRepo.DeleteRacun(id);
+            return RedirectToAction("Administracija", "Finansije");
+        }
+
+        // 📌 Reset PIN-a od strane upravnika
+        [Authorize(Roles = "Upravnik")]
+        public IActionResult ResetujPin(int stanId)
+        {
+            var stan = _stanRepo.GetStanById(stanId);
+            if (stan == null) return NotFound();
+
+            stan.FinansijeZakljucane = false;
+            stan.PinAttempts = 0;
+            stan.DatumOtkljucavanjaFinansija = DateTime.Now;
+            stan.ObavestenONovomPINu = false;
+            stan.Pin = PinHelper.GenerisiNoviPIN(); // helper
+
+            _stanRepo.UpdateStan(stan);
+            return RedirectToAction("Index","Stan");
         }
     }
 }

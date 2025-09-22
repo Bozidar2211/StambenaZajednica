@@ -167,11 +167,6 @@ namespace StambenaZajednica.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Discriminator")
-                        .IsRequired()
-                        .HasMaxLength(21)
-                        .HasColumnType("nvarchar(21)");
-
                     b.Property<string>("Email")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
@@ -179,11 +174,11 @@ namespace StambenaZajednica.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit");
 
-                    b.Property<string>("Gmail")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Ime")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsLocked")
+                        .HasColumnType("bit");
 
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("bit");
@@ -208,11 +203,17 @@ namespace StambenaZajednica.Migrations
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
 
+                    b.Property<int>("PinAttempts")
+                        .HasColumnType("int");
+
                     b.Property<string>("Prezime")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("StanId")
+                        .HasColumnType("int");
 
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("bit");
@@ -231,14 +232,12 @@ namespace StambenaZajednica.Migrations
                         .HasDatabaseName("UserNameIndex")
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
+                    b.HasIndex("StanId");
+
                     b.ToTable("AspNetUsers", (string)null);
-
-                    b.HasDiscriminator().HasValue("ApplicationUser");
-
-                    b.UseTphMappingStrategy();
                 });
 
-            modelBuilder.Entity("StambenaZajednica.Models.Finansije", b =>
+            modelBuilder.Entity("StambenaZajednica.Models.Racun", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -246,34 +245,37 @@ namespace StambenaZajednica.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime>("Datum")
+                        .HasColumnType("datetime2");
+
                     b.Property<DateTime>("DatumDospeca")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime?>("DatumUplate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<decimal>("IznosDuga")
+                    b.Property<decimal>("Iznos")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<decimal>("IznosUplate")
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<bool>("JePlaceno")
+                        .HasColumnType("bit");
 
-                    b.Property<int>("StambenaZajednicaId")
+                    b.Property<string>("Opis")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("StambZajednicaId")
                         .HasColumnType("int");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int?>("StanId")
+                        .HasColumnType("int");
 
-                    b.Property<string>("TipTroska")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("Tip")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("StambenaZajednicaId");
+                    b.HasIndex("StambZajednicaId");
 
-                    b.ToTable("Finansije");
+                    b.HasIndex("StanId");
+
+                    b.ToTable("Racuni");
                 });
 
             modelBuilder.Entity("StambenaZajednica.Models.StambZajednica", b =>
@@ -285,15 +287,12 @@ namespace StambenaZajednica.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Adresa")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("BrojZgrade")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Naziv")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
@@ -310,17 +309,56 @@ namespace StambenaZajednica.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("BrojStana")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("DaLiJeZakljucan")
+                    b.Property<DateTime?>("DatumOtkljucavanjaFinansija")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("FinansijeZakljucane")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Kvadratura")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("ObavestenONovomPINu")
                         .HasColumnType("bit");
 
                     b.Property<string>("Pin")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("StambenaZajednicaId")
+                    b.Property<int>("PinAttempts")
+                        .HasColumnType("int");
+
+                    b.Property<string>("StanarId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("ZajednicaId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StanarId");
+
+                    b.HasIndex("ZajednicaId");
+
+                    b.ToTable("Stanovi");
+                });
+
+            modelBuilder.Entity("StambenaZajednica.Models.Uplata", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("DatumUplate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("Iznos")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("RacunId")
                         .HasColumnType("int");
 
                     b.Property<string>("StanarId")
@@ -328,21 +366,11 @@ namespace StambenaZajednica.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("StambenaZajednicaId");
+                    b.HasIndex("RacunId");
 
                     b.HasIndex("StanarId");
 
-                    b.ToTable("Stanovi");
-                });
-
-            modelBuilder.Entity("StambenaZajednica.Models.Stanar", b =>
-                {
-                    b.HasBaseType("StambenaZajednica.Models.ApplicationUser");
-
-                    b.Property<string>("Pin")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasDiscriminator().HasValue("Stanar");
+                    b.ToTable("Uplate");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -396,40 +424,84 @@ namespace StambenaZajednica.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("StambenaZajednica.Models.Finansije", b =>
+            modelBuilder.Entity("StambenaZajednica.Models.ApplicationUser", b =>
                 {
-                    b.HasOne("StambenaZajednica.Models.StambZajednica", "StambenaZajednica")
-                        .WithMany("Finansije")
-                        .HasForeignKey("StambenaZajednicaId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.HasOne("StambenaZajednica.Models.Stan", "Stan")
+                        .WithMany()
+                        .HasForeignKey("StanId");
 
-                    b.Navigation("StambenaZajednica");
+                    b.Navigation("Stan");
+                });
+
+            modelBuilder.Entity("StambenaZajednica.Models.Racun", b =>
+                {
+                    b.HasOne("StambenaZajednica.Models.StambZajednica", "StambZajednica")
+                        .WithMany()
+                        .HasForeignKey("StambZajednicaId");
+
+                    b.HasOne("StambenaZajednica.Models.Stan", "Stan")
+                        .WithMany("Racuni")
+                        .HasForeignKey("StanId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("StambZajednica");
+
+                    b.Navigation("Stan");
                 });
 
             modelBuilder.Entity("StambenaZajednica.Models.Stan", b =>
                 {
-                    b.HasOne("StambenaZajednica.Models.StambZajednica", "StambenaZajednica")
-                        .WithMany("Stanovi")
-                        .HasForeignKey("StambenaZajednicaId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("StambenaZajednica.Models.Stanar", "Stanar")
+                    b.HasOne("StambenaZajednica.Models.ApplicationUser", "Stanar")
                         .WithMany()
                         .HasForeignKey("StanarId")
                         .OnDelete(DeleteBehavior.SetNull);
 
-                    b.Navigation("StambenaZajednica");
+                    b.HasOne("StambenaZajednica.Models.StambZajednica", "Zajednica")
+                        .WithMany("Stanovi")
+                        .HasForeignKey("ZajednicaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Stanar");
+
+                    b.Navigation("Zajednica");
+                });
+
+            modelBuilder.Entity("StambenaZajednica.Models.Uplata", b =>
+                {
+                    b.HasOne("StambenaZajednica.Models.Racun", "Racun")
+                        .WithMany("Uplate")
+                        .HasForeignKey("RacunId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("StambenaZajednica.Models.ApplicationUser", "Stanar")
+                        .WithMany("Uplate")
+                        .HasForeignKey("StanarId");
+
+                    b.Navigation("Racun");
 
                     b.Navigation("Stanar");
                 });
 
+            modelBuilder.Entity("StambenaZajednica.Models.ApplicationUser", b =>
+                {
+                    b.Navigation("Uplate");
+                });
+
+            modelBuilder.Entity("StambenaZajednica.Models.Racun", b =>
+                {
+                    b.Navigation("Uplate");
+                });
+
             modelBuilder.Entity("StambenaZajednica.Models.StambZajednica", b =>
                 {
-                    b.Navigation("Finansije");
-
                     b.Navigation("Stanovi");
+                });
+
+            modelBuilder.Entity("StambenaZajednica.Models.Stan", b =>
+                {
+                    b.Navigation("Racuni");
                 });
 #pragma warning restore 612, 618
         }
