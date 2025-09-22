@@ -1,0 +1,37 @@
+﻿@model IEnumerable<StambenaZajednica.Models.ApplicationUser>
+@{
+    ViewData["Title"] = "Dodeli stan korisniku";
+    var stanId = ViewBag.StanId;
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4 text-center">Dodeli stan korisniku</h2>
+
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>Ime</th>
+                <th>Prezime</th>
+                <th>Email</th>
+                <th>Akcija</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var korisnik in Model)
+            {
+                <tr>
+                    <td>@korisnik.Ime</td>
+                    <td>@korisnik.Prezime</td>
+                    <td>@korisnik.Email</td>
+                    <td>
+                        <form asp-action="DodeliStan" method="post">
+                            <input type="hidden" name="stanId" value="@stanId" />
+                            <input type="hidden" name="userId" value="@korisnik.Id" />
+                            <button type="submit" class="btn btn-success btn-sm">Dodeli</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

@@ -1,0 +1,11 @@
+﻿@model StambenaZajednica.Models.Stan
+
+<div class="container mt-4">
+    <h2>Moj stan</h2>
+
+    <table class="table table-bordered">
+        <tr><th>Broj stana</th><td>@Model.BrojStana</td></tr>
+        <tr><th>Površina</th><td>@Model.Kvadratura m²</td></tr>
+        <tr><th>Stambena zajednica</th><td>@Model.Zajednica?.Naziv</td></tr>
+    </table>
+</div>

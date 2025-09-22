@@ -1,45 +1,70 @@
 ﻿@model IEnumerable<StambenaZajednica.Models.Stan>
+@{
+    ViewData["Title"] = "Stanovi";
+}
 
-<h2>Lista Stanova</h2>
-<a asp-action="Create" class="btn btn-primary">Dodaj Stan</a>
+<div class="container mt-4">
+    <h2 class="mb-4 text-center">Stanovi</h2>
 
-<table class="table">
-    <thead>
-        <tr>
-            <th>Broj Stana</th>
-            <th>PIN</th>
-            <th>Stambena Zajednica</th>
-            <th>Stanar</th> <!-- Dodajemo kolonu za dodelu stanara -->
-            <th>Akcije</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var stan in Model)
-        {
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
             <tr>
-                <td>@stan.BrojStana</td>
-                <td>@stan.Pin</td>
-                <td>@stan.StambenaZajednica.Naziv</td>
-                <td>
-                    <!-- Dodajemo dropdown meni za dodelu stanara -->
-                    <form asp-action="AssignStanar" method="post">
-                        <input type="hidden" name="stanId" value="@stan.Id" />
-                        <select name="stanarId" class="form-control">
-                            <option value="">Izaberi Stanara</option>
-                            @foreach (var stanar in ViewBag.Stanari as IEnumerable<ApplicationUser> ?? Enumerable.Empty<ApplicationUser>())
-                            {
-                                <option value="@stanar.Id">@stanar.UserName</option>
-                            }
-
-                        </select>
-                        <button type="submit" class="btn btn-success">Dodeli Stanara</button>
-                    </form>
-                </td>
-                <td>
-                    <a asp-action="Edit" asp-route-id="@stan.Id" class="btn btn-warning">Izmeni</a>
-                    <a asp-action="Delete" asp-route-id="@stan.Id" class="btn btn-danger">Obriši</a>
-                </td>
+                <th>Broj stana</th>
+                <th>Kvadratura</th>
+                <th>Zajednica</th>
+                <th>Stanar</th>
+                <th>PIN</th>
+                <th>Akcije</th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @foreach (var stan in Model)
+            {
+                <tr>
+                    <td>@stan.BrojStana</td>
+                    <td>@stan.Kvadratura m²</td>
+                    <td>@(string.IsNullOrWhiteSpace(stan.Zajednica?.Naziv) ? "Nepoznata zajednica" : stan.Zajednica.Naziv)</td>
+                    <td>
+                        @if (stan.Stanar != null)
+                        {
+                            @($"{stan.Stanar.Ime} {stan.Stanar.Prezime}")
+                        }
+                        else
+                        {
+                            <span class="text-muted">Nema stanara</span>
+                        }
+                    </td>
+                    <td>@stan.Pin</td>
+                    <td>
+                        @if (User.IsInRole("Upravnik"))
+                        {
+                            <a class="btn btn-sm btn-primary" href="/Stan/Edit/@stan.Id">Izmeni</a>
+                            <a class="btn btn-sm btn-danger" asp-controller="Stan" asp-action="Delete" asp-route-id="@stan.Id">Obriši</a>
+
+                            //dodela stana
+                            @if (stan.Stanar == null)
+                            {
+                               <a class="btn btn-sm btn-success"asp-controller="Stan"asp-action="Dodeli"asp-route-stanId="@stan.Id">Dodeli</a>
+                            }
+                            //reset pina
+                            @if (stan.FinansijeZakljucane)
+                            {
+                                <a asp-controller="Finansije" asp-action="ResetujPin" asp-route-stanId="@stan.Id"
+                                   class="btn btn-warning btn-sm">
+                                    Otključaj / Resetuj PIN
+                                </a>
+                            }
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    @if (User.IsInRole("Upravnik"))
+    {
+        <div class="text-end">
+            <a class="btn btn-success" href="/Stan/Create">Dodaj novi stan</a>
+        </div>
+    }
+</div>

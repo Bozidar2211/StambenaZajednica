@@ -1,59 +1,69 @@
-﻿using Microsoft.EntityFrameworkCore;
-using StambenaZajednica.Data.RepositoryInterfaces;
+﻿using StambenaZajednica.Data.RepositoryInterfaces;
+using StambenaZajednica.Data;
 using StambenaZajednica.Models;
+using Microsoft.EntityFrameworkCore;
 
-namespace StambenaZajednica.Data.Repositories
+public class StanRepository : IStanRepository
 {
-    public class StanRepository : IStanRepository
+    private readonly RepositoryDbContext _context;
+
+    public StanRepository(RepositoryDbContext context)
     {
-        private readonly RepositoryDbContext _context;
+        _context = context;
+    }
 
-        public StanRepository(RepositoryDbContext context)
+    public Stan? GetStanById(int id)
+    {
+        return _context.Stanovi
+            .Include(s => s.Zajednica)
+            .Include(s => s.Stanar)
+            .FirstOrDefault(s => s.Id == id);
+    }
+
+    public IEnumerable<Stan> GetSviStanovi()
+    {
+        return _context.Stanovi
+            .Include(s => s.Zajednica)
+            .Include(s => s.Stanar)
+            .ToList();
+    }
+
+    public IEnumerable<Stan> GetStanoviBezStanara()
+    {
+        return _context.Stanovi
+            .Where(s => s.StanarId == null)
+            .ToList();
+    }
+
+    public void DodeliStanKorisniku(int stanId, string userId)
+    {
+        var stan = _context.Stanovi.Find(stanId);
+        if (stan != null)
         {
-            _context = context;
+            stan.StanarId = userId;
+            _context.SaveChanges();
         }
+    }
 
-        public async Task<List<Stan>> GetAllAsync()
-        {
-            return await _context.Stanovi.ToListAsync();
-        }
+    public void AddStan(Stan stan)
+    {
+        _context.Stanovi.Add(stan);
+        _context.SaveChanges();
+    }
 
-        public async Task<Stan> GetByIdAsync(int id)
-        {
-#pragma warning disable CS8603 // Possible null reference return.
-            return await _context.Stanovi.FindAsync(id);
-#pragma warning restore CS8603 // Possible null reference return.
-        }
+    public void UpdateStan(Stan stan)
+    {
+        _context.Stanovi.Update(stan);
+        _context.SaveChanges();
+    }
 
-        public async Task AddAsync(Stan stan)
+    public void DeleteStan(int id)
+    {
+        var stan = _context.Stanovi.Find(id);
+        if (stan != null)
         {
-            await _context.Stanovi.AddAsync(stan);
-            await _context.SaveChangesAsync();
-        }
-
-        public async Task UpdateAsync(Stan stan)
-        {
-            _context.Stanovi.Update(stan);
-            await _context.SaveChangesAsync();
-        }
-
-        public async Task DeleteAsync(int id)
-        {
-            var stan = await GetByIdAsync(id);
-            if (stan != null)
-            {
-                _context.Stanovi.Remove(stan);
-                await _context.SaveChangesAsync();
-            }
-        }
-
-        // Pristup ApplicationUser-u 
-        public async Task<ApplicationUser> GetUserByIdAsync(string userId)
-        {
-#pragma warning disable CS8603 // Possible null reference return.
-            return await _context.Users
-                .FirstOrDefaultAsync(u => u.Id == userId);
-#pragma warning restore CS8603 // Possible null reference return.
+            _context.Stanovi.Remove(stan);
+            _context.SaveChanges();
         }
     }
 }

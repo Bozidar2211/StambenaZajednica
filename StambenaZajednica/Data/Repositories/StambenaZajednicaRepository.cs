@@ -1,50 +1,58 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using StambenaZajednica.Data;
 using StambenaZajednica.Data.RepositoryInterfaces;
 using StambenaZajednica.Models;
+using Microsoft.EntityFrameworkCore;
 
-namespace StambenaZajednica.Data.Repositories
+public class StambenaZajednicaRepository : IStambenaZajednicaRepository
 {
-        public class StambenaZajednicaRepository : IStambenaZajednicaRepository
+    private readonly RepositoryDbContext _context;
+
+    public StambenaZajednicaRepository(RepositoryDbContext context)
+    {
+        _context = context;
+    }
+
+    public IEnumerable<StambZajednica> GetSveZajednice()
+    {
+        return _context.StambeneZajednice
+            .Include(z => z.Stanovi)
+            .ToList();
+    }
+
+    public StambZajednica? GetZajednicaById(int id)
+    {
+        return _context.StambeneZajednice
+            .Include(z => z.Stanovi)
+            .FirstOrDefault(z => z.Id == id);
+    }
+
+    public void AddZajednica(StambZajednica zajednica)
+    {
+        _context.StambeneZajednice.Add(zajednica);
+        _context.SaveChanges();
+    }
+
+    public void UpdateZajednica(StambZajednica zajednica)
+    {
+        _context.StambeneZajednice.Update(zajednica);
+        _context.SaveChanges();
+    }
+
+    public void DeleteZajednica(int id)
+    {
+        var zajednica = _context.StambeneZajednice.Find(id);
+        if (zajednica != null)
         {
-            private readonly RepositoryDbContext _context;
-
-            public StambenaZajednicaRepository(RepositoryDbContext context)
-            {
-                _context = context;
-            }
-
-            public async Task<List<StambZajednica>> GetAllAsync()
-            {
-                return await _context.StambeneZajednice.ToListAsync();
-            }
-
-            public async Task<StambZajednica> GetByIdAsync(int id)
-            {
-#pragma warning disable CS8603 // Possible null reference return.
-            return await _context.StambeneZajednice.FindAsync(id);
-#pragma warning restore CS8603 // Possible null reference return.
-        }
-
-            public async Task AddAsync(StambZajednica stambenaZajednica)
-            {
-                await _context.StambeneZajednice.AddAsync(stambenaZajednica);
-                await _context.SaveChangesAsync();
-            }
-
-            public async Task UpdateAsync(StambZajednica stambenaZajednica)
-            {
-                _context.StambeneZajednice.Update(stambenaZajednica);
-                await _context.SaveChangesAsync();
-            }
-
-            public async Task DeleteAsync(int id)
-            {
-                var stambenaZajednica = await GetByIdAsync(id);
-                if (stambenaZajednica != null)
-                {
-                    _context.StambeneZajednice.Remove(stambenaZajednica);
-                    await _context.SaveChangesAsync();
-                }
-            }
+            _context.StambeneZajednice.Remove(zajednica);
+            _context.SaveChanges();
         }
     }
+
+    public IEnumerable<Stan> GetStanoviZaZajednicu(int zajednicaId)
+    {
+        return _context.Stanovi
+            .Where(s => s.ZajednicaId == zajednicaId)
+            .Include(s => s.Stanar)
+            .ToList();
+    }
+}

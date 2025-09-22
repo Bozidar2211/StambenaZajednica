@@ -4,58 +4,57 @@ using StambenaZajednica.Models;
 
 namespace StambenaZajednica.Data
 {
-    public class RepositoryDbContext : IdentityDbContext<ApplicationUser> 
+    public class RepositoryDbContext : IdentityDbContext<ApplicationUser>
     {
-        public DbSet<StambZajednica> StambeneZajednice { get; set; }
-        public DbSet<Stan> Stanovi { get; set; }
-        public DbSet<Finansije> Finansije { get; set; }
-
-        // Konstruktor koji prima DbContextOptions i prosleđuje ga bazi klasi
         public RepositoryDbContext(DbContextOptions<RepositoryDbContext> options)
-            : base(options) // Pozivamo bazni konstruktor IdentityDbContext
+            : base(options)
         {
         }
 
+        public DbSet<StambZajednica> StambeneZajednice { get; set; }
+        public DbSet<Stan> Stanovi { get; set; }
+        public DbSet<Racun> Racuni { get; set; }
+        public DbSet<Uplata> Uplate { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            base.OnModelCreating(modelBuilder); // Poziv baze za Identity
+            base.OnModelCreating(modelBuilder);
 
-            // Definisanje primarnih ključeva
-            modelBuilder.Entity<StambZajednica>()
-                .HasKey(sz => sz.Id);
-
+            // StambenaZajednica → Stan (1:N)
             modelBuilder.Entity<Stan>()
-                .HasKey(s => s.Id);
+                .HasOne(s => s.Zajednica)
+                .WithMany(z => z.Stanovi)
+                .HasForeignKey(s => s.ZajednicaId)
+                .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<Finansije>()
-                .HasKey(f => f.Id);
-
-            // Relacija: StambenaZajednica -> Stan (jedan-na-više)
+            // Stan → ApplicationUser (1:1, opcionalno)
             modelBuilder.Entity<Stan>()
-                .HasOne(s => s.StambenaZajednica)
-                .WithMany(sz => sz.Stanovi)
-                .HasForeignKey(s => s.StambenaZajednicaId);
+                .HasOne(s => s.Stanar)
+                .WithMany()
+                .HasForeignKey(s => s.StanarId)
+                .OnDelete(DeleteBehavior.SetNull);
 
-            // Relacija: StambenaZajednica -> Finansija (jedan-na-više)
-            modelBuilder.Entity<Finansije>()
-                .HasOne(f => f.StambenaZajednica)
-                .WithMany(sz => sz.Finansije)
-                .HasForeignKey(f => f.StambenaZajednicaId);
+            // Stan → Racun (1:N)
+            modelBuilder.Entity<Racun>()
+                .HasOne(r => r.Stan)
+                .WithMany(s => s.Racuni)
+                .HasForeignKey(r => r.StanId)
+                .OnDelete(DeleteBehavior.Cascade);
 
-            // Relacija: Stan -> Stanar (jedan-na-jedan, opcionalno)
-            modelBuilder.Entity<Stan>()
-                .HasOne(s => s.Stanar)    // Veza sa Stanarom
-                .WithMany()               // Nema potrebe za definisanjem obrnute veze
-                .HasForeignKey(s => s.StanarId)  // Strani ključ
-                .OnDelete(DeleteBehavior.SetNull); // Ako je Stanar obrisan, setuj StanarId na null
+            // Racun → Uplata (1:N)
+            modelBuilder.Entity<Uplata>()
+                .HasOne(u => u.Racun)
+                .WithMany(r => r.Uplate)
+                .HasForeignKey(u => u.RacunId)
+                .OnDelete(DeleteBehavior.Cascade);
 
-            // Definisanje preciznosti za decimalne vrednosti
-            modelBuilder.Entity<Finansije>()
-                .Property(f => f.IznosDuga)
+            // Decimal preciznost za finansije
+            modelBuilder.Entity<Racun>()
+                .Property(r => r.Iznos)
                 .HasColumnType("decimal(18,2)");
 
-            modelBuilder.Entity<Finansije>()
-                .Property(f => f.IznosUplate)
+            modelBuilder.Entity<Uplata>()
+                .Property(u => u.Iznos)
                 .HasColumnType("decimal(18,2)");
         }
     }

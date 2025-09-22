@@ -1,107 +1,208 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 using StambenaZajednica.Data.RepositoryInterfaces;
 using StambenaZajednica.Models;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
+using StambenaZajednica.Helpers;
 
 namespace StambenaZajednica.Controllers
 {
+    [Authorize]
     public class StanController : Controller
     {
         private readonly IStanRepository _stanRepo;
+        private readonly IUserRepository _userRepo;
         private readonly UserManager<ApplicationUser> _userManager;
-        public StanController(IStanRepository stanRepo, UserManager<ApplicationUser> userManager)
+        private readonly IStambenaZajednicaRepository _zajednicaRepo;
+
+        public StanController(
+            IStanRepository stanRepo,
+            IUserRepository userRepo,
+            UserManager<ApplicationUser> userManager,
+            IStambenaZajednicaRepository zajednicaRepo)
         {
             _stanRepo = stanRepo;
+            _userRepo = userRepo;
             _userManager = userManager;
+            _zajednicaRepo = zajednicaRepo;
         }
 
-        // 📌 Prikaz svih stanova (dostupno samo za upravnika)
-        [Authorize(Roles = "Upravnik")]
         public async Task<IActionResult> Index()
         {
-            var stanovi = await _stanRepo.GetAllAsync();
-            var stanari = await _userManager.GetUsersInRoleAsync("Stanar");
-            ViewBag.Stanari = await _userManager.GetUsersInRoleAsync("Stanar");
-            return View(stanovi);
+            var username = User.Identity?.Name;
+
+            var user = await _userManager.Users
+                .Include(u => u.Stan)
+                .FirstOrDefaultAsync(u => u.UserName == username);
+
+            if (user == null) return RedirectToAction("Login", "Account");
+
+            if (User.IsInRole("Upravnik"))
+                return View(_stanRepo.GetSviStanovi());
+
+            if (user.StanId != null)
+            {
+                var mojStan = _stanRepo.GetStanById(user.StanId.Value);
+                if (mojStan != null)
+                    return View(new List<Stan> { mojStan });
+            }
+
+            return View(new List<Stan>());
         }
 
-        [Authorize(Roles = "Upravnik")]
-        [HttpPost]
-        public async Task<IActionResult> DodeliStanara(int stanId, string stanarId)
-        {
-            var stan = await _stanRepo.GetByIdAsync(stanId);
-            if (stan == null) return NotFound();
-
-            var stanar = await _userManager.FindByIdAsync(stanarId);
-            if (stanar == null) return NotFound();
-
-            stan.StanarId = stanar.Id;
-            await _stanRepo.UpdateAsync(stan);
-
-            return RedirectToAction(nameof(Index));
-        }
-
-        // 📌 Prikaz forme za kreiranje stana (samo za upravnika)
         [Authorize(Roles = "Upravnik")]
         public IActionResult Create()
         {
+            ViewBag.Zajednice = new SelectList(
+                _zajednicaRepo.GetSveZajednice(), "Id", "Naziv");
             return View();
         }
 
-        // 📌 POST: Dodavanje novog stana
         [Authorize(Roles = "Upravnik")]
         [HttpPost]
-        public async Task<IActionResult> Create(Stan stan)
+        public IActionResult Create(Stan stan)
         {
-            if (ModelState.IsValid)
+            // Ručna validacija
+            if (string.IsNullOrWhiteSpace(stan.BrojStana))
+                ModelState.AddModelError("BrojStana", "Broj stana je obavezan.");
+
+            if (stan.Kvadratura <= 0)
+                ModelState.AddModelError("Kvadratura", "Kvadratura mora biti veća od 0.");
+
+            if (stan.ZajednicaId <= 0)
+                ModelState.AddModelError("ZajednicaId", "Morate odabrati zajednicu.");
+
+            if (!ModelState.IsValid)
             {
-                await _stanRepo.AddAsync(stan);
-                return RedirectToAction(nameof(Index));
+                ViewBag.Zajednice = new SelectList(
+                    _zajednicaRepo.GetSveZajednice(), "Id", "Naziv");
+                return View(stan);
             }
-            return View(stan);
+
+            _stanRepo.AddStan(stan);
+            return RedirectToAction("Index");
         }
 
-        // 📌 Prikaz forme za izmenu stana (samo za upravnika)
         [Authorize(Roles = "Upravnik")]
-        public async Task<IActionResult> Edit(int id)
+        public IActionResult Edit(int id)
         {
-            var stan = await _stanRepo.GetByIdAsync(id);
+            var stan = _stanRepo.GetStanById(id);
             if (stan == null) return NotFound();
+
+            ViewBag.Zajednice = new SelectList(
+                _zajednicaRepo.GetSveZajednice(), "Id", "Naziv", stan.ZajednicaId);
             return View(stan);
         }
 
-        // 📌 POST: Ažuriranje stana (samo za upravnika)
         [Authorize(Roles = "Upravnik")]
         [HttpPost]
-        public async Task<IActionResult> Edit(int id, Stan stan)
+        public IActionResult Edit(Stan stan)
         {
-            if (id != stan.Id) return BadRequest();
+            // Ručna validacija
+            if (string.IsNullOrWhiteSpace(stan.BrojStana))
+                ModelState.AddModelError("BrojStana", "Broj stana je obavezan.");
 
-            if (ModelState.IsValid)
+            if (stan.Kvadratura <= 0)
+                ModelState.AddModelError("Kvadratura", "Kvadratura mora biti veća od 0.");
+
+            if (stan.ZajednicaId <= 0)
+                ModelState.AddModelError("ZajednicaId", "Morate odabrati zajednicu.");
+
+            if (!ModelState.IsValid)
             {
-                await _stanRepo.UpdateAsync(stan);
-                return RedirectToAction(nameof(Index));
+                ViewBag.Zajednice = new SelectList(
+                    _zajednicaRepo.GetSveZajednice(), "Id", "Naziv", stan.ZajednicaId);
+                return View(stan);
             }
-            return View(stan);
+
+            var postojeci = _stanRepo.GetStanById(stan.Id);
+            if (postojeci == null) return NotFound();
+
+            // Ažuriraj samo osnovna polja
+            postojeci.BrojStana = stan.BrojStana;
+            postojeci.Kvadratura = stan.Kvadratura;
+            postojeci.ZajednicaId = stan.ZajednicaId;
+
+            _stanRepo.UpdateStan(postojeci);
+            return RedirectToAction("Index");
         }
 
-        // 📌 Prikaz forme za brisanje stana (samo za upravnika)
         [Authorize(Roles = "Upravnik")]
-        public async Task<IActionResult> Delete(int id)
+        public IActionResult Delete(int id)
         {
-            var stan = await _stanRepo.GetByIdAsync(id);
+            var stan = _stanRepo.GetStanById(id);
             if (stan == null) return NotFound();
+
             return View(stan);
         }
 
-        // 📌 POST: Brisanje stana (samo za upravnika)
         [Authorize(Roles = "Upravnik")]
         [HttpPost, ActionName("Delete")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            await _stanRepo.DeleteAsync(id);
-            return RedirectToAction(nameof(Index));
+            var stan = _stanRepo.GetStanById(id);
+            if (stan == null) return NotFound();
+
+            // Odveži sve korisnike koji su vezani za ovaj stan
+            var korisnici = _userManager.Users.Where(u => u.StanId == id).ToList();
+            foreach (var k in korisnici)
+            {
+                k.StanId = null;
+                await _userManager.UpdateAsync(k);
+            }
+
+            _stanRepo.DeleteStan(id);
+            return RedirectToAction("Index");
+        }
+
+        [Authorize(Roles = "Upravnik")]
+        public IActionResult Dodeli(int stanId)
+        {
+            var stan = _stanRepo.GetStanById(stanId);
+            if (stan == null) return NotFound();
+
+            ViewBag.StanId = stanId;
+            return View(_userRepo.GetSviKorisniciBezStana());
+        }
+
+        [Authorize(Roles = "Upravnik")]
+        [HttpPost]
+        public async Task<IActionResult> DodeliStan(int stanId, string userId)
+        {
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                ModelState.AddModelError("", "Morate izabrati korisnika.");
+                ViewBag.StanId = stanId;
+                return View("Dodeli", _userRepo.GetSviKorisniciBezStana());
+            }
+
+            var stan = _stanRepo.GetStanById(stanId);
+            var korisnik = _userRepo.GetKorisnikById(userId);
+
+            if (stan == null || korisnik == null) return NotFound();
+
+            stan.StanarId = userId;
+            stan.Pin = PinHelper.GenerisiNoviPIN();
+            _stanRepo.UpdateStan(stan);
+
+            korisnik.StanId = stan.Id;
+            await _userManager.UpdateAsync(korisnik);
+
+            return RedirectToAction("Index");
+        }
+
+        [Authorize(Roles = "Stanar")]
+        public async Task<IActionResult> MojStan()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user?.StanId == null) return RedirectToAction("Index", "Home");
+
+            var stan = _stanRepo.GetStanById(user.StanId.Value);
+            if (stan == null) return NotFound();
+
+            return View(stan);
         }
     }
 }

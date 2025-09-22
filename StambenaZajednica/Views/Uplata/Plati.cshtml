@@ -1,0 +1,16 @@
+﻿@model StambenaZajednica.Models.Racun
+
+<div class="container mt-4">
+    <h2>Uplata za račun: @Model.Tip</h2>
+
+    <form asp-action="Plati" method="post">
+        <input type="hidden" asp-for="Id" />
+
+        <div class="form-group mb-3">
+            <label for="Iznos">Iznos uplate</label>
+            <input name="iznos" class="form-control" />
+        </div>
+
+        <button type="submit" class="btn btn-success">Plati</button>
+    </form>
+</div>

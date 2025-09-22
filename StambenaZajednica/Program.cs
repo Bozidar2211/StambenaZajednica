@@ -1,9 +1,8 @@
-using Microsoft.AspNetCore.Identity;
+    using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using StambenaZajednica.Data;
 using StambenaZajednica.Data.Repositories;
 using StambenaZajednica.Data.RepositoryInterfaces;
-using StambenaZajednica.Services;
 using StambenaZajednica.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,10 +19,10 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
 // Registracija Repository interfejsa
 builder.Services.AddScoped<IStambenaZajednicaRepository, StambenaZajednicaRepository>();
 builder.Services.AddScoped<IStanRepository, StanRepository>();
-builder.Services.AddScoped<IFinansijeRepository, FinansijeRepository>();
+builder.Services.AddScoped<IRacunRepository, RacunRepository>();
+builder.Services.AddScoped<IUplataRepository, UplataRepository>();
+builder.Services.AddScoped<IUserRepository, UserRepository>();
 
-//Registracija Pin servisa
-builder.Services.AddScoped<PinGeneratorService>();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -50,7 +49,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
-
+app.UseAuthentication(); // mora pre Authorization
 app.UseAuthorization();
 
 app.MapControllerRoute(

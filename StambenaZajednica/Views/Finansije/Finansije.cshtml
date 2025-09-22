@@ -1,0 +1,43 @@
+﻿@model IEnumerable<StambenaZajednica.Models.Racun>
+
+<div class="container mt-4">
+    <h2 class="mb-4 text-center">Pregled finansija</h2>
+
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>Tip troška</th>
+                <th>Opis</th>
+                <th>Iznos</th>
+                <th>Uplaćeno</th>
+                <th>Preostalo</th>
+                <th>Višak</th>
+                <th>Status</th>
+                <th>Dospeće</th>
+                <th>Akcija</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var racun in Model)
+            {
+                <tr>
+                    <td>@racun.Tip</td>
+                    <td>@racun.Opis</td>
+                    <td>@racun.Iznos.ToString("C")</td>
+                    <td>@racun.UkupnoUplaceno.ToString("C")</td>
+                    <td>@racun.PreostaliDug.ToString("C")</td>
+                    <td>@racun.Visak.ToString("C")</td>
+                    <td>@racun.Status</td>
+                    <td>@racun.DatumDospeca.ToShortDateString()</td>
+                    <td>
+                        @if (!racun.JePlaceno)
+                        {
+                            <a asp-controller="Uplata" asp-action="Plati" asp-route-id="@racun.Id" class="btn btn-primary btn-sm">Plati</a>
+                        }
+                    </td>
+
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

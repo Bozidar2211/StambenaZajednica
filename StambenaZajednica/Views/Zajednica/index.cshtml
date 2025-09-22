@@ -1,30 +1,38 @@
-﻿@model IEnumerable<StambZajednica>
-
+﻿@model IEnumerable<StambenaZajednica.Models.StambZajednica>
 @{
-    ViewData["Title"] = "Lista stambenih zajednica";
+    ViewData["Title"] = "Stambene zajednice";
 }
 
-<h2>Lista stambenih zajednica</h2>
-<a asp-action="Create" class="btn btn-primary">Dodaj novu zajednicu</a>
-<table class="table">
-    <thead>
-        <tr>
-            <th>Naziv</th>
-            <th>Adresa</th>
-            <th>Akcije</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var zajednica in Model)
-        {
+<div class="container mt-4">
+    <h2 class="mb-4 text-center">Stambene zajednice</h2>
+
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
             <tr>
-                <td>@zajednica.Naziv</td>
-                <td>@zajednica.Adresa</td>
-                <td>
-                    <a asp-action="Edit" asp-route-id="@zajednica.Id" class="btn btn-warning">Izmeni</a>
-                    <a asp-action="Delete" asp-route-id="@zajednica.Id" class="btn btn-danger">Obriši</a>
-                </td>
+                <th>Naziv</th>
+                <th>Adresa</th>
+                <th>Broj zgrade</th>
+                <th>Akcije</th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @foreach (var z in Model)
+            {
+                <tr>
+                    <td>@z.Naziv</td>
+                    <td>@z.Adresa</td>
+                    <td>@z.BrojZgrade</td>
+                    <td>
+                        <a class="btn btn-sm btn-primary" href="/Zajednica/Edit/@z.Id">Izmeni</a>
+                        <a class="btn btn-sm btn-danger" asp-controller="Zajednica" asp-action="Delete" asp-route-id="@z.Id">Obriši</a>
+
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="text-end">
+        <a class="btn btn-success" href="/Zajednica/Create">Dodaj novu zajednicu</a>
+    </div>
+</div>

@@ -1,18 +1,34 @@
-﻿namespace StambenaZajednica.Models
+﻿using StambenaZajednica.Models;
+
+namespace StambenaZajednica.Models
 {
     public class Stan
     {
-        public int Id { get; set; }  // Primarni ključ
-        public required string BrojStana { get; set; }  // Broj stana
-        public required string Pin { get; set; }  // PIn kod za pristup finansijama (6 cifara)
-        public bool DaLiJeZakljucan { get; set; }  // Da li je nalog stanara zaključan zbog previše pokušaja PINA
+        public int Id { get; set; }
+        public string? BrojStana { get; set; }
+        public int Kvadratura { get; set; }
 
-        // Strani ključ prema stambenoj zajednici
-        public int StambenaZajednicaId { get; set; }
-        public required StambZajednica StambenaZajednica { get; set; }  // Navigacija ka stambenoj zajednici
+        public int ZajednicaId { get; set; }
+        public StambZajednica? Zajednica { get; set; }
 
-        // Stanar vezan za stan (navigacija)
-        public string? StanarId { get; set; }  //Relacija sa korisnikom (Stanarom)
-        public Stanar? Stanar { get; set; }  // Stanar koji je vezan za stan
+        public string? StanarId { get; set; } // Identity korisnik
+        public ApplicationUser? Stanar { get; set; }
+
+        // PIN od 6 cifara
+        public string? Pin { get; set; }
+
+        // Broj neuspešnih pokušaja
+        public int PinAttempts { get; set; } = 0;
+
+        // Zaključavanje pristupa finansijama
+        public bool FinansijeZakljucane { get; set; } = false;
+
+        // Kada je nalog otključan
+        public DateTime? DatumOtkljucavanjaFinansija { get; set; }
+
+        // Da li je stanar obavešten o otključavanju
+        public bool ObavestenONovomPINu { get; set; } = false;
+
+        public ICollection<Racun>? Racuni { get; set; }
     }
 }
