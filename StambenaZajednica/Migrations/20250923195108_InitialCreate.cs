@@ -204,7 +204,7 @@ namespace StambenaZajednica.Migrations
                     Tip = table.Column<int>(type: "int", nullable: false),
                     JePlaceno = table.Column<bool>(type: "bit", nullable: false),
                     StanId = table.Column<int>(type: "int", nullable: true),
-                    StambZajednicaId = table.Column<int>(type: "int", nullable: true)
+                    StambZajednicaId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -213,7 +213,8 @@ namespace StambenaZajednica.Migrations
                         name: "FK_Racuni_StambeneZajednice_StambZajednicaId",
                         column: x => x.StambZajednicaId,
                         principalTable: "StambeneZajednice",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Racuni_Stanovi_StanId",
                         column: x => x.StanId,
