@@ -20,33 +20,40 @@ namespace StambenaZajednica.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // StambenaZajednica → Stan (1:N)
+            // StambenaZajednica → Stan (1:N) - Cascade
             modelBuilder.Entity<Stan>()
                 .HasOne(s => s.Zajednica)
                 .WithMany(z => z.Stanovi)
                 .HasForeignKey(s => s.ZajednicaId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Stan → ApplicationUser (1:1, opcionalno)
+            // Stan → ApplicationUser (1:1, opcionalno) - SetNull
             modelBuilder.Entity<Stan>()
                 .HasOne(s => s.Stanar)
                 .WithMany()
                 .HasForeignKey(s => s.StanarId)
                 .OnDelete(DeleteBehavior.SetNull);
 
-            // Stan → Racun (1:N)
+            // Stan → Racun (1:N) - Cascade
             modelBuilder.Entity<Racun>()
                 .HasOne(r => r.Stan)
                 .WithMany(s => s.Racuni)
                 .HasForeignKey(r => r.StanId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            // Racun → Uplata (1:N)
+            // Racun → Uplata (1:N) - Cascade
             modelBuilder.Entity<Uplata>()
                 .HasOne(u => u.Racun)
                 .WithMany(r => r.Uplate)
                 .HasForeignKey(u => u.RacunId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // ✅ Dodato: Racun → StambenaZajednica (N:1) - Restrict (da presečemo multiple cascade path)
+            modelBuilder.Entity<Racun>()
+                .HasOne(r => r.StambZajednica)
+                .WithMany() // nema navigacije u modelu, zato prazno
+                .HasForeignKey(r => r.StambZajednicaId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             // Decimal preciznost za finansije
             modelBuilder.Entity<Racun>()

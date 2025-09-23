@@ -12,7 +12,7 @@ using StambenaZajednica.Data;
 namespace StambenaZajednica.Migrations
 {
     [DbContext(typeof(RepositoryDbContext))]
-    [Migration("20250920162853_InitialCreate")]
+    [Migration("20250923195108_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -263,7 +263,7 @@ namespace StambenaZajednica.Migrations
                     b.Property<string>("Opis")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int?>("StambZajednicaId")
+                    b.Property<int>("StambZajednicaId")
                         .HasColumnType("int");
 
                     b.Property<int?>("StanId")
@@ -440,7 +440,9 @@ namespace StambenaZajednica.Migrations
                 {
                     b.HasOne("StambenaZajednica.Models.StambZajednica", "StambZajednica")
                         .WithMany()
-                        .HasForeignKey("StambZajednicaId");
+                        .HasForeignKey("StambZajednicaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("StambenaZajednica.Models.Stan", "Stan")
                         .WithMany("Racuni")
